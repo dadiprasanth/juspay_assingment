@@ -22,7 +22,9 @@ export default function PreviewArea(props) {
     },1000)
   }
   return (<>
-  <button onClick={()=>check()} style={{position:"absolute",top:10}}>play</button>
+  <button
+  className={`px-2 py-1 ${ 'bg-green-300'}`}
+   onClick={()=>check()} style={{position:"absolute",bottom:20,cursor:"pointer"}}>play</button>
     <div className="flex-none h-full overflow-y-auto p-2" style={{position:"relative",width:"100%"}}>
       <CatSprite flag={flag} data={props.items.filter(x=>x.target=="cat")} />
       {props.count.map((x,index)=>{
