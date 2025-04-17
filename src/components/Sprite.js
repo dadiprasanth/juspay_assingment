@@ -69,28 +69,37 @@ export default function Sprite(props) {
       setTimeout(() => {
         if (x.key === "move") {
           const container = document.getElementById("container_play");
-          const width = container.offsetWidth - 50; // Includes padding + border
-          const height = container.offsetHeight - 50;
-          let tempT =
-            styles.top + Math.sin(styles.angle * (Math.PI / 180)) * x.value;
-          if (tempT <= 0) {
-            tempT = 0;
-          } else if (tempT >= height) {
-            tempT = height;
-          }
-          let tempL =
-            styles.left + Math.cos(styles.angle * (Math.PI / 180)) * x.value;
-          if (tempL <= 0) {
-            tempL = 0;
-          } else if (tempL >= width) {
-            tempL = width;
-          }
+          const width = container.offsetWidth - 95.17; // Width of the cat sprite
+          const height = container.offsetHeight - 100; // Height of the cat sprite
+
+          const findTop = (styles) => {
+            let tempT =
+              styles.top + Math.sin(styles.angle * (Math.PI / 180)) * x.value;
+            if (tempT <= 0) {
+              return 0;
+            } else if (tempT >= height) {
+              return height;
+            }
+            return tempT;
+          };
+
+          const findLeft = (styles) => {
+            let tempL =
+              styles.left + Math.cos(styles.angle * (Math.PI / 180)) * x.value;
+            if (tempL <= 0) {
+              return 0;
+            } else if (tempL >= width) {
+              return width;
+            }
+            return tempL;
+          };
+
           setStyles((styles) => ({
             angle: styles.angle,
-            top: tempT,
-            left: tempL,
+            top: findTop(styles),
+            left: findLeft(styles),
           }));
-        } else if (x.key === "turn") {
+        }  else if (x.key === "turn") {
           setStyles((styles) => ({
             ...styles,
             angle: styles.angle + +x.value,
