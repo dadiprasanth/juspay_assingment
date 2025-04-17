@@ -1,27 +1,115 @@
 import React, { useEffect, useState } from "react";
 
 export default function CatSprite(props) {
-  const [styles, setStyles] = useState({   
+  const [styles, setStyles] = useState({
     top: 0,
     left: 0,
-    angle: 0
+    angle: 0,
   });
   const [speech, setSpeech] = useState(null);
   const [thought, setThought] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  const handleMouseDown = (e) => {
+    const container = document.getElementById("container_play");
+    const containerRect = container.getBoundingClientRect();
+
+    // Calculate the offset between the mouse and the sprite's position
+    setDragOffset({
+      x: e.clientX - containerRect.left - styles.left,
+      y: e.clientY - containerRect.top - styles.top,
+    });
+
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+
+    const container = document.getElementById("container_play");
+    const containerRect = container.getBoundingClientRect();
+
+    // Calculate new position
+    let newLeft = e.clientX - containerRect.left - dragOffset.x;
+    let newTop = e.clientY - containerRect.top - dragOffset.y;
+
+    // Ensure the sprite stays within the container
+    newLeft = Math.max(0, Math.min(newLeft, containerRect.width - 95.17)); // Width of the cat sprite
+    newTop = Math.max(0, Math.min(newTop, containerRect.height - 100)); // Height of the cat sprite
+
+    setStyles((styles) => ({
+      ...styles,
+      left: newLeft,
+      top: newTop,
+    }));
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    } else {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
 
   const moving = () => {
     props.data.forEach((x, index) => {
       setTimeout(() => {
         if (x.key === "move") {
+          const container = document.getElementById("container_play");
+          const width = container.offsetWidth - 95.17; // Width of the cat sprite
+          const height = container.offsetHeight - 100; // Height of the cat sprite
+
+          const findTop = (styles) => {
+            let tempT =
+              styles.top + Math.sin(styles.angle * (Math.PI / 180)) * x.value;
+            if (tempT <= 0) {
+              return 0;
+            } else if (tempT >= height) {
+              return height;
+            }
+            return tempT;
+          };
+
+          const findLeft = (styles) => {
+            let tempL =
+              styles.left + Math.cos(styles.angle * (Math.PI / 180)) * x.value;
+            if (tempL <= 0) {
+              return 0;
+            } else if (tempL >= width) {
+              return width;
+            }
+            return tempL;
+          };
+
           setStyles((styles) => ({
             angle: styles.angle,
-            top: styles.top + Math.sin(styles.angle * (Math.PI / 180)) * x.value,
-            left: styles.left + Math.cos(styles.angle * (Math.PI / 180)) * x.value
+            top: findTop(styles),
+            left: findLeft(styles),
           }));
         } else if (x.key === "turn") {
-          setStyles((styles) => ({...styles, angle: styles.angle + (+x.value)}));
+          setStyles((styles) => ({
+            ...styles,
+            angle: styles.angle + +x.value,
+          }));
         } else if (x.key === "goto") {
-          setStyles((styles) => ({...styles, top: +x.value[1], left: +x.value[0]}));
+          setStyles((styles) => ({
+            ...styles,
+            top: +x.value[1],
+            left: +x.value[0],
+          }));
         } else if (x.key === "say") {
           setSpeech(x.value[0]);
           setTimeout(() => {
@@ -33,20 +121,30 @@ export default function CatSprite(props) {
             setThought(null);
           }, x.value[1] * 1000);
         } else {
-          //repeat
+          // repeat
           setTimeout(() => {
-            moving()
-          },1000 )
+            moving();
+          }, 1000);
         }
-      },1000 * (index + 1)) // Add delay multiplier based on index
-    })
-  }
+      }, 1000 * (index + 1));
+    });
+  };
 
-  useEffect(()=>{
-    if(props.flag)
-    moving()
+  useEffect(() => {
+    if (props.flag) moving();
+  }, [props.flag]);
+  useEffect(() => {
+    if (props.reset) {
+      setStyles({
+        top: 0,
+        left: 0,
+        angle: 0,
+      });
+      setSpeech(null);
+      setThought(null);
+    }
+  },[props.reset])
 
-  },[props.flag])
   return (
     <>
       <svg
@@ -56,9 +154,13 @@ export default function CatSprite(props) {
         viewBox="0.3210171699523926 0.3000000357627869 95.17898101806641 100.04156036376953"
         version="1.1"
         xmlSpace="preserve"
-        style={{position:"absolute",...styles,
-          transform: `rotate(${styles.angle}deg)`, 
+        style={{
+          position: "absolute",
+          ...styles,
+          transform: `rotate(${styles.angle}deg)`,
+          cursor: "grab",
         }}
+        onMouseDown={handleMouseDown}
       >
         <g>
           <g id="Page-1" stroke="none" fillRule="evenodd">
@@ -98,7 +200,7 @@ export default function CatSprite(props) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                <g id="body-and-leg">
+                                <g id="body-and-leg">
                   <path
                     d="M 46.2 76.7 C 47.4 75.8 48.6 74.3 50.2 72 C 51.5 70.1 52.9 66.4 52.9 66.4 C 53.8 63.9 54.4 59.1 51.1 59.2 C 48.9 59.3 46.9 59 43.5 58.5 C 37.5 57.3 36.4 56.5 33.9 60.6 C 31.2 65.4 24.3 68.9 32.8 77.2 C 32.8 77.2 37.7 81 43.6 86.8 C 47.6 90.7 53.9 96.3 56.1 98.2 C 56.6 98.6 57.2 98.8 57.8 98.9 C 67.5 99.8 74.7 98.8 74.7 94.5 C 74.7 87.3 60.4 89.8 60.4 89.8 C 60.4 89.8 55.8 85.9 53.7 84 L 46.2 76.7 Z "
                     id="body"
@@ -124,7 +226,7 @@ export default function CatSprite(props) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                <g id="head">
+                                <g id="head">
                   <path
                     d="M 53.1 9 C 50.8 8.6 48.4 8.4 45.6 8.6 C 40.9 8.8 36.4 10.5 36.4 10.5 L 24.3 2.6 C 23.9 2.4 23.4 2.7 23.5 3.1 L 25.6 21 C 26.2 20.2 15 33.8 22.1 45.2 C 29.2 56.6 44.3 61.7 63.1 58 C 81.9 54.3 86.3 43.5 85.1 37.8 C 83.9 32.1 76.8 30 76.8 30 C 76.8 30 76.7 25.5 73.5 20 C 71.6 16.7 65.2 12 65.2 12 L 62.6 1.3 C 62.5 0.9 62 0.8 61.7 1 L 53.1 9 Z "
                     stroke="#001026"
@@ -225,6 +327,7 @@ export default function CatSprite(props) {
                     />
                   </g>
                 </g>
+                {/* ...existing SVG code... */}
               </g>
             </g>
           </g>
@@ -234,7 +337,7 @@ export default function CatSprite(props) {
         <div
           style={{
             position: "absolute",
-            top: styles.top ,
+            top: styles.top,
             left: styles.left,
             backgroundColor: "white",
             padding: "5px 10px",
@@ -251,7 +354,7 @@ export default function CatSprite(props) {
         <div
           style={{
             position: "absolute",
-            top: styles.top ,
+            top: styles.top,
             left: styles.left,
             backgroundColor: "white",
             padding: "5px 10px",

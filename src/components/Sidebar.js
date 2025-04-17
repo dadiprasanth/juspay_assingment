@@ -29,7 +29,7 @@ function DraggableItem({ id, children, motion, value, target }) {
   );
 }
 
-export default function Sidebar({selectedSprite,setSelectedSprite,count, setCount}) {
+export default function Sidebar({selectedSprite,setSelectedSprite,count, setCount,setItems,setreset}) {
   const [moves, setMoves] = useState(10);
   const [fangle, setFangle] = useState(15);
   const [bangle, setBangle] = useState(-15);
@@ -38,14 +38,20 @@ export default function Sidebar({selectedSprite,setSelectedSprite,count, setCoun
   const [sayDuration, setSayDuration] = useState(2);
   const [thinkText, setThinkText] = useState("Hmm...");
   const [thinkDuration, setThinkDuration] = useState(2);
-
+const reseFun=()=>{
+  setCount([])
+  setSelectedSprite('cat')
+  setItems([])
+  setreset((reset)=>!reset)
+  
+}
   return (
     <div className="w-60 flex-none h-full overflow-y-auto flex flex-col items-start p-2 border-r border-gray-200">
       <div className="font-bold"> {"Events"} </div>
-      {"When "}
-      <Icon name="flag" size={15} className="text-green-600 mx-2" />
-      {"clicked"}
-      {"When this sprite clicked"}
+
+      <button
+      className={`px-2 py-1 ${ 'bg-blue-500' }`}
+       onClick={reseFun}>Reset</button>
 
       <div className="font-bold"> {"Sprite Selection"} </div>
       <div className="flex space-x-2 mb-2">
